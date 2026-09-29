@@ -4,7 +4,6 @@ using Newtonsoft.Json.Linq;
 using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
-using Websocket.Client;
 
 namespace OBSWebsocketDotNet
 {

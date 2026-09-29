@@ -12,12 +12,12 @@ namespace OBSWebsocketDotNet.Communication
         /// Server Message's operation code
         /// </summary>
         [JsonProperty(PropertyName = "op")]
-        public MessageTypes OperationCode { set; get; }
+        public MessageTypes OperationCode { get; set;}
 
         /// <summary>
         /// Server Data
         /// </summary>
         [JsonProperty(PropertyName = "d")]
-        public JObject Data { get; set; }
+        public JObject Data;
     }
 }

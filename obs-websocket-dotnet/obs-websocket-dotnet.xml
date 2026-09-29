@@ -115,18 +115,12 @@
             String reason of disconnect
             </summary>
         </member>
-        <member name="P:OBSWebsocketDotNet.Communication.ObsDisconnectionInfo.WebsocketDisconnectionInfo">
-            <summary>
-            Websocket Client internal information
-            </summary>
-        </member>
-        <member name="M:OBSWebsocketDotNet.Communication.ObsDisconnectionInfo.#ctor(OBSWebsocketDotNet.Communication.ObsCloseCodes,System.String,Websocket.Client.DisconnectionInfo)">
+        <member name="M:OBSWebsocketDotNet.Communication.ObsDisconnectionInfo.#ctor(OBSWebsocketDotNet.Communication.ObsCloseCodes,System.String)">
             <summary>
             Constructor
             </summary>
             <param name="obsCloseCode">Close/Error codes sent by OBS Websocket when closing the connection</param>
             <param name="disconnectReason">String reason of disconnect</param>
-            <param name="websocketDisconnectionInfo">Websocket Client internal information</param>
         </member>
         <member name="T:OBSWebsocketDotNet.Communication.ServerMessage">
             <summary>
@@ -138,7 +132,7 @@
             Server Message's operation code
             </summary>
         </member>
-        <member name="P:OBSWebsocketDotNet.Communication.ServerMessage.Data">
+        <member name="F:OBSWebsocketDotNet.Communication.ServerMessage.Data">
             <summary>
             Server Data
             </summary>

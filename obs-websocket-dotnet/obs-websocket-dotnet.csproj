@@ -1,20 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
-		<AssemblyName>obs-websocket-dotnet</AssemblyName>
-		<RootNamespace>OBSWebsocketDotNet</RootNamespace>
-		<Copyright>Copyright © BarRaider 2026</Copyright>
-		<LangVersion>8</LangVersion>
-		<Version>5.7.0</Version>
-		<Authors>BarRaider</Authors>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageProjectUrl>https://github.com/BarRaider/obs-websocket-dotnet</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/BarRaider/obs-websocket-dotnet</RepositoryUrl>
-		<Description>Official obs-websocket .NET library. Written in C#. Supports .NET Standard 2.1 and .NET 10.</Description>
-		<PackageTags>OBS obs-websocket websocket official obs-websocket-dotnet obs.websocket.net obs-websocket-net netstandard2.1 net10</PackageTags>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageReleaseNotes>What's new in v5.7.0
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <AssemblyName>obs-websocket-dotnet</AssemblyName>
+    <RootNamespace>OBSWebsocketDotNet</RootNamespace>
+    <Copyright>Copyright © BarRaider 2026</Copyright>
+    <LangVersion>8</LangVersion>
+    <Version>5.7.0</Version>
+    <Authors>BarRaider</Authors>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/BarRaider/obs-websocket-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/BarRaider/obs-websocket-dotnet</RepositoryUrl>
+    <Description>Official obs-websocket .NET library. Written in C#. Supports .NET Standard 2.1 and .NET 10.</Description>
+    <PackageTags>OBS obs-websocket websocket official obs-websocket-dotnet obs.websocket.net obs-websocket-net netstandard2.1 net10</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReleaseNotes>What's new in v5.7.0
 * Brings the library up to date with the obs-websocket 5.7.0 protocol: 8 new events (CustomEvent, InputSettingsChanged, SourceFilterSettingsChanged, RecordFileChanged, ScreenshotSaved, CanvasCreated, CanvasRemoved, CanvasNameChanged) and 17 new requests (generic Outputs, recording directory/split/chapter, input deinterlacing, GetSourceFilterKindList, GetSceneItemSource, GetCanvasList)
 * Event subscription control via EventSubscriptions, including opt-in for high-volume events
 * Multi-target netstandard2.1 and net10.0; tests and TestClient moved from net9 to net10
@@ -23,23 +22,33 @@
 * Greatly expanded test suite: request/response round-trip coverage plus conformance gates that catch drift from the protocol spec
 
 </PackageReleaseNotes>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DocumentationFile>obs-websocket-dotnet.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-	  <PackageReference Include="Websocket.Client" Version="5.1.2" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="..\LICENSE">
-	    <Pack>True</Pack>
-	    <PackagePath></PackagePath>
-	  </None>
-	</ItemGroup>
-
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>obs-websocket-dotnet.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.32" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>
+      </PackagePath>
+    </None>
+    <None Include="obs-websocket-dotnet.csproj.user" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="websocket-sharp">
+      <HintPath>$(BeatSaberDir)\Libs\websocket-sharp.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+  </ItemGroup>
 </Project>

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OBSWebsocketDotNet.Communication;
-using Websocket.Client;
+using WebSocketSharp;
 
 namespace OBSWebsocketDotNet
 {
@@ -20,7 +19,7 @@ namespace OBSWebsocketDotNet
         private const int SUPPORTED_RPC_VERSION = 1;
         private TimeSpan wsTimeout = TimeSpan.FromSeconds(10);
         private string connectionPassword = null;
-        private WebsocketClient wsConnection;
+        private WebSocketSharp.WebSocket wsConnection;
 
         private delegate void RequestCallback(OBSWebsocket sender, JObject body);
         private readonly ConcurrentDictionary<string, TaskCompletionSource<JObject>> responseHandlers;
@@ -37,7 +36,7 @@ namespace OBSWebsocketDotNet
         {
             get
             {
-                return wsConnection?.ReconnectTimeout ?? wsTimeout;
+                return wsConnection?.WaitTime ?? wsTimeout;
             }
             set
             {
@@ -45,7 +44,7 @@ namespace OBSWebsocketDotNet
 
                 if (wsConnection != null)
                 {
-                    wsConnection.ReconnectTimeout = wsTimeout;
+                    wsConnection.WaitTime = wsTimeout;
                 }
             }
         }
@@ -57,7 +56,7 @@ namespace OBSWebsocketDotNet
         {
             get
             {
-                return (wsConnection != null && wsConnection.IsRunning);
+                return (wsConnection != null && wsConnection.ReadyState == WebSocketSharp.WebSocketState.Open);
             }
         }
 
@@ -106,20 +105,35 @@ namespace OBSWebsocketDotNet
                 throw new ArgumentException($"Invalid url, must start with '{WEBSOCKET_URL_PREFIX}'");
             }
 
-            if (wsConnection != null && wsConnection.IsRunning)
+            if (wsConnection != null && wsConnection.ReadyState == WebSocketSharp.WebSocketState.Open)
             {
                 Disconnect();
             }
 
-            wsConnection = new WebsocketClient(new Uri(url));
-            wsConnection.IsReconnectionEnabled = false;
-            wsConnection.ReconnectTimeout = null;
-            wsConnection.ErrorReconnectTimeout = null;
-            wsConnection.MessageReceived.Subscribe(m => Task.Run(() => WebsocketMessageHandler(this, m)));
-            wsConnection.DisconnectionHappened.Subscribe(d => Task.Run(() => OnWebsocketDisconnect(this, d)));
+            wsConnection = new WebSocketSharp.WebSocket(url);
+            wsConnection.OnMessage += WsConnection_OnMessage;
+            wsConnection.OnClose += WsConnection_OnClose;
 
             connectionPassword = password;
-            wsConnection.StartOrFail();
+            wsConnection.ConnectAsync();
+        }
+
+        private void WsConnection_OnClose(object sender, CloseEventArgs e)
+        {
+            Task.Run(() => OnWebsocketDisconnect(this, e));
+        }
+
+        private void WsConnection_OnMessage(object sender, MessageEventArgs e)
+        {
+            Task.Run(() => {
+                try
+                {
+                    WebsocketMessageHandler(this, e);
+                }
+                catch (Exception ex) {
+                    Logger?.LogError(ex, "Failed WebsocketMessageHandler");
+                }
+            });
         }
 
         /// <summary>
@@ -133,7 +147,7 @@ namespace OBSWebsocketDotNet
                 // Attempt to both close and dispose the existing connection
                 try
                 {
-                    wsConnection.Stop(WebSocketCloseStatus.NormalClosure, "User requested disconnect");
+                    wsConnection.Close(CloseStatusCode.Normal, "User requested disconnect");
                     ((IDisposable)wsConnection).Dispose();
                 }
                 catch { }
@@ -152,30 +166,30 @@ namespace OBSWebsocketDotNet
         }
 
         // This callback handles a websocket disconnection
-        private void OnWebsocketDisconnect(object sender, DisconnectionInfo d)
+        private void OnWebsocketDisconnect(object sender, CloseEventArgs d)
         {
             IsIdentified = false;
 
-            if (d == null || d.CloseStatus == null)
+            if (d == null || d.Reason.IsNullOrEmpty())
             {
-                Disconnected?.Invoke(sender, new ObsDisconnectionInfo(ObsCloseCodes.UnknownReason, null, d));
+                Disconnected?.Invoke(sender, new ObsDisconnectionInfo(ObsCloseCodes.UnknownReason, null));
             }
             else
             {
-                Disconnected?.Invoke(sender, new ObsDisconnectionInfo((ObsCloseCodes)d.CloseStatus, d.CloseStatusDescription, d));
+                Disconnected?.Invoke(sender, new ObsDisconnectionInfo((ObsCloseCodes)d.Code, d.Reason));
             }
         }
 
         // This callback handles incoming JSON messages and determines if it's
         // a request response or an event ("Update" in obs-websocket terminology)
-        private void WebsocketMessageHandler(object sender, ResponseMessage e)
+        private void WebsocketMessageHandler(object sender, MessageEventArgs e)
         {
-            if (e.MessageType != WebSocketMessageType.Text)
+            if (!e.IsText)
             {
                 return;
             }
 
-            ServerMessage msg = JsonConvert.DeserializeObject<ServerMessage>(e.Text);
+            ServerMessage msg = JsonConvert.DeserializeObject<ServerMessage>(e.Data);
             JObject body = msg.Data;
 
             switch (msg.OperationCode)
@@ -241,6 +255,8 @@ namespace OBSWebsocketDotNet
         /// <returns>The server's JSON response as a JObject</returns>
         internal JObject SendRequest(MessageTypes operationCode, string requestType, JObject additionalFields = null, bool waitForReply = true)
         {
+            Logger?.LogInformation($"Prepare send request: opCode={operationCode}, reqType={requestType}");
+
             if (wsConnection == null)
             {
                 throw new NullReferenceException("Websocket is not initialized");
@@ -266,6 +282,8 @@ namespace OBSWebsocketDotNet
             {
                 return null;
             }
+
+            Logger?.LogInformation("Sent");
 
             // Wait for a response (received and notified by the websocket response handler)
             if (!tcs.Task.Wait((int)wsTimeout.TotalMilliseconds))
@@ -365,8 +383,9 @@ namespace OBSWebsocketDotNet
 
         private void HandleHello(JObject payload)
         {
-            if (!wsConnection.IsStarted)
+            if (wsConnection.ReadyState != WebSocketSharp.WebSocketState.Open)
             {
+                Logger?.LogWarning($"Connection is not ready, ReadyState={wsConnection.ReadyState}");
                 return;
             }
 
