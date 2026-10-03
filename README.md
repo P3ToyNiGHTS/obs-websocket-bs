@@ -1,5 +1,21 @@
+# obs-websocket-bs (Beat Saber Custom Fork)
+
+> 💡 **Fork Notice**
+> This repository is a customized fork of the original [BarRaider/obs-websocket-dotnet](https://github.com/BarRaider/obs-websocket-dotnet). 
+> It has been specifically optimized and tweaked to seamlessly integrate OBS WebSocket communications within **Beat Saber** mods.
+
+---
+
+## 🕹️ Beat Saber Specific Customizations
+- **[WebSocket Library Migration]** Replaced the original `Websocket.Client` package with `websocket-sharp` to ensure full compatibility and stable networking within the Beat Saber modding environment.
+- **[Breaking Changes / Clean up]** Removed `ObsDisconnectionInfo.WebsocketDisconnectionInfo` due to the migration away from `Websocket.Client`.
+
+---
+
+# Original Documentation
+
 # obs-websocket-dotnet
-![Build status](https://github.com/Palakis/obs-websocket-dotnet/workflows/obs-websocket-dotnet%20Tests/badge.svg)  Releases: [![NuGet](https://img.shields.io/nuget/v/obs-websocket-dotnet.svg?style=flat)](https://www.nuget.org/packages/obs-websocket-dotnet)  
+![Build status](https://github.com/Palakis/obs-websocket-dotnet/workflows/obs-websocket-dotnet%20Tests/badge.svg)  Releases: [![NuGet](https://img.shields.io/nuget/v/obs-websocket-dotnet.svg?style=flat)](https://www.nuget.org/packages/obs-websocket-dotnet)
 
 Official .NET library (written in C#) to communicate with an obs-websocket server.
 
